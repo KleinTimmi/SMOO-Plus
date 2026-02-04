@@ -1,7 +1,3 @@
-#include <game/System/GameSystem.h>
-#include <game/Sequence/HakoniwaSequence.h>
-#include <game/Scene/StageScene.h>
-
 #include "hk/ro/RoUtil.h"
 
 #include "al/Library/Action/ActorActionKeeper.h"
@@ -15,5 +11,8 @@
 #include <al/Library/Player/PlayerUtil.h>
 #include <al/Library/Scene/SceneUtil.h>
 
+#include <game/Scene/StageScene.h>
+#include <game/Sequence/HakoniwaSequence.h>
+#include <game/System/GameSystem.h>
 
-
+void sequenceInfoWindow_Child();

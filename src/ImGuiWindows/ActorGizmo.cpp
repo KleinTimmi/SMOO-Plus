@@ -30,6 +30,8 @@ HakoniwaSequence* gameSeq;
 StageScene* stageScene;
 PlayerActorHakoniwa* playerHak;
 bool noGetPlayer = false;
+bool gActorGizmoEnabled = false;
+ImGuizmo::MODE gActorGizmoMode = ImGuizmo::LOCAL;
 
 namespace {
 
@@ -100,6 +102,7 @@ al::LiveActor* GetSelectedActor() {
 void DrawActorBrowser(al::Scene* scene) {
     if (!scene)
         return;
+    toolbar();
 
     ImGui::Begin("Actors");
 
@@ -155,10 +158,10 @@ void DrawActorBrowser(al::Scene* scene) {
 }
 
 void DrawSelectedActorGizmo(sead::Camera* camera, sead::Projection* projection) {
-    if (!camera || !projection)
+    if (!camera || !projection || !sSelectedActor || !gActorGizmoEnabled)
         return;
-    al::Scene* scene = helpers::tryGetScene();
 
+    al::Scene* scene = helpers::tryGetScene();
     // actor_picking::Update(scene, camera);
 
     // al::LiveActor* hovered = actor_picking::getHoveredActor(); // Unused for now, will be used for hover highlights later
@@ -187,7 +190,7 @@ void DrawSelectedActorGizmo(sead::Camera* camera, sead::Projection* projection) 
     ImGuizmo::SetRect(0, 0, ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y);
     ImGuizmo::SetGizmoSizeClipSpace(0.25f);
 
-    if (ImGuizmo::Manipulate(view, proj, ImGuizmo::TRANSLATE | ImGuizmo::ROTATE, ImGuizmo::LOCAL, model)) {
+    if (ImGuizmo::Manipulate(view, proj, ImGuizmo::TRANSLATE | ImGuizmo::ROTATE, gActorGizmoMode, model)) {
         sead::Matrix34f out;
         ImGuizmoToMatrix34(model, out);
 
@@ -313,6 +316,20 @@ void DrawSelectedActorGizmo(sead::Camera* camera, sead::Projection* projection) 
     }
 #pragma endregion
 
+    ImGui::End();
+}
+
+void toolbar() {
+    ImGui::Begin("Actor Gizmo Toolbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+    ImGui::Checkbox("Enable Actor Gizmo", &gActorGizmoEnabled);
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("Toggle the Actor Gizmo tool.\nWhen enabled, you can manipulate the selected actor's transform in the viewport.");
+    }
+    if (ImGui::Combo("##GizmoMode", (int*)&gActorGizmoMode, "Local\0World\0")) {
+    }
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("Change the gizmo mode between Local and World space.");
+    }
     ImGui::End();
 }
 

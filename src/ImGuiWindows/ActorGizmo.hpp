@@ -32,6 +32,7 @@ void DrawSelectedActorGizmo(sead::Camera* camera, sead::Projection* projection);
 
 // Utils
 al::LiveActor* GetSelectedActor();
+void toolbar();
 
 __attribute__((used)) static const char* flagNames[] = {"Dead",       "Clipped",   "Cannot Clip",    "Draw Clipped", "Calc Anim On",   "Model Visible",
                                                         "No Collide", "Unknown 8", "Valid Mat Code", "Area Target",  "Move FX Sensor", "Unknown 12"};
