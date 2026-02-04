@@ -12,6 +12,7 @@
 #include "fsHelper.h"
 #include "heap/seadHeap.h"
 #include "imgui.h"
+#include "ImGuizmo.h"
 #include "nn/hid.h"
 #include "Settings/StageWarper.hpp"
 
@@ -42,6 +43,19 @@ static void setupFont() {
 
     hk::gfx::ImGuiBackendNvn::instance()->initTexture(false);
     ImGui::GetIO().FontDefault = font;
+}
+
+static void beginFrame() {
+    ImGuiIO& io = ImGui::GetIO();
+
+    ImGuizmo::BeginFrame();
+
+    ImGuizmo::SetRect(0.0f, 0.0f, io.DisplaySize.x, io.DisplaySize.y);
+
+    if (ImGuizmo::IsUsing() || ImGuizmo::IsOver()) {
+        io.WantCaptureMouse = true;
+        io.WantCaptureKeyboard = true;
+    }
 }
 
 static void updateImGuiInput() {
@@ -195,9 +209,15 @@ static void setup() {
     hk::gfx::ImGuiBackendNvn* imgui = hk::gfx::ImGuiBackendNvn::instance();
 
     imgui->setAllocator(
-        {[](size allocSize, size alignment) -> void* { return sImGuiHeap->tryAlloc(allocSize, alignment); }, [](void* ptr) -> void { sImGuiHeap->free(ptr); }});
+        {[](size allocSize, size alignment) -> void* { return sImGuiHeap->tryAlloc(allocSize, alignment); }, [](void* ptr) { sImGuiHeap->free(ptr); }});
 
     imgui->tryInitialize();
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+
     setupFont();
 }
 

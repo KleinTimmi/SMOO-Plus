@@ -21,7 +21,9 @@
 #include "al/Library/LiveActor/ActorPoseKeeper.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/LiveActor/LiveActor.h"
+#include "al/Library/LiveActor/LiveActorKit.h"
 #include "al/Library/Memory/HeapUtil.h"
+#include "al/Library/Model/ModelKeeper.h"
 #include "al/Library/Nerve/NerveUtil.h"
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Scene/SceneUtil.h"
@@ -63,6 +65,7 @@
 #include "hooksFreezeTag.hpp"
 #include "imgui.h"
 #include "Imgui.hpp"
+#include "ImGuiWindows/ActorGizmo.hpp"
 #include "layouts/ConnectionStatus.h"
 #include "layouts/SpeedrunIcon.h"
 #include "logger.hpp"
@@ -114,24 +117,41 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
 
     gameSystemInit.orig(gameSystem);
 
-    // nn::hid::InitializeMouse();
-    // nn::hid::InitializeKeyboard();
+    nn::hid::InitializeMouse();
+    nn::hid::InitializeKeyboard();
 });
+// === Actor Gizmo System ===
+
+static al::Scene* sLastScene = nullptr;
+static al::LiveActor* gSelectedActor = nullptr;
 
 HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSystem* gameSystem) -> void {
     drawMainHookHk.orig(gameSystem);
 
+    al::Scene* curScene = gameSystem->mSequence->mCurrentScene;
+
+    actor_gizmo::ResetForScene(curScene);
+
     auto* drawContext = Application::instance()->mDrawSystemInfo->drawContext;
+    if (!drawContext)
+        return;
 
-    /* ImGui */
-
-    // imgui::updateImGuiInput();
-
+    imgui::updateImGuiInput();
     ImGui::NewFrame();
+    imgui::beginFrame();
+
+    if (curScene) {
+        sead::LookAtCamera* cam = &const_cast<sead::LookAtCamera&>(al::getLookAtCamera(curScene, 0));
+        sead::Projection* projection = cam ? &const_cast<sead::Projection&>(al::getProjectionSead(curScene, 0)) : nullptr;
+
+        actor_gizmo::DrawActorBrowser(curScene);
+        actor_gizmo::DrawSelectedActorGizmo(cam, projection);
+    }
+
     drawMain(gameSystem->mSequence);
     StageWarper::ShowSearchWindow();
-    ImGui::Render();
 
+    ImGui::Render();
     hk::gfx::ImGuiBackendNvn::instance()->draw(ImGui::GetDrawData(), drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
 });
 
@@ -165,12 +185,13 @@ HkTrampoline<void, GameDataFile*, const char*> sendShinePacketHook2 = hk::hook::
     sendShinePacketHook2.orig(file, name);
 });
 
-HkTrampoline<void, GameDataFile*, al::PlacementId*> sendCoinCollectCollectPacketHook = hk::hook::trampoline([](GameDataFile* file, al::PlacementId* placeID) -> void {
-    al::StringTmp<128> placeIDString;
-    placeID->makeString(&placeIDString);
-    Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(), file->mCurrentStageName.cstr());
-    sendCoinCollectCollectPacketHook.orig(file, placeID);
-});
+HkTrampoline<void, GameDataFile*, al::PlacementId*> sendCoinCollectCollectPacketHook =
+    hk::hook::trampoline([](GameDataFile* file, al::PlacementId* placeID) -> void {
+        al::StringTmp<128> placeIDString;
+        placeID->makeString(&placeIDString);
+        Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(), file->mCurrentStageName.cstr());
+        sendCoinCollectCollectPacketHook.orig(file, placeID);
+    });
 
 HkTrampoline<void, HakoniwaSequence*, al::SequenceInitInfo*> hakoniwaSequenceInitHook =
     hk::hook::trampoline([](HakoniwaSequence* sequence, al::SequenceInitInfo* initInfo) -> void {

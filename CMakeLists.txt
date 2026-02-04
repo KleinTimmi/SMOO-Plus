@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 include_directories(lib)
 
 include_directories(lib/imgui)
+include_directories(lib/ImGuizmo)
 
 include_directories(lib/custom)
 include_directories(lib/custom/al)
