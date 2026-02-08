@@ -23,6 +23,7 @@
 #include "ActorPicking.hpp"
 #include "imgui.h"
 #include "ImGuizmo.h"
+#include "levelStuff/LoadLevel.hpp"
 
 static al::Scene* sLastScene = nullptr;
 static al::LiveActor* sSelectedActor = nullptr;
@@ -103,6 +104,8 @@ void DrawActorBrowser(al::Scene* scene) {
     if (!scene)
         return;
     toolbar();
+    LoadLevel::updateAllActorMods();
+    LoadLevel::debugModifiedShit();
 
     ImGui::Begin("Actors");
 
@@ -211,6 +214,7 @@ void DrawSelectedActorGizmo(sead::Camera* camera, sead::Projection* projection) 
                 drawer->updateModel(modelkeeper->getModelCtrl());
             }
         }
+        LoadLevel::onActorModified(sSelectedActor);
         sSelectedActor->updateCollider();
         modelkeeper->update();
         modelkeeper->updateLast();
@@ -224,6 +228,7 @@ void DrawSelectedActorGizmo(sead::Camera* camera, sead::Projection* projection) 
         modelkeeper->hide();
         modelkeeper->show();
         sSelectedActor->appear();
+        sSelectedActor->initAfterPlacement();
     }
 
     ImGui::Begin("Actor Transform");

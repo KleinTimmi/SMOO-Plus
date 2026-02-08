@@ -1,0 +1,2 @@
+should I create a seperate heap ? the levels are not that big, but when someone is in city or wood it may crash the game,
+    especially if I need to make changes to it.

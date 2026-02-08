@@ -66,6 +66,7 @@
 #include "imgui.h"
 #include "Imgui.hpp"
 #include "ImGuiWindows/ActorGizmo.hpp"
+#include "ImGuiWindows/levelStuff/LoadLevel.hpp"
 #include "layouts/ConnectionStatus.h"
 #include "layouts/SpeedrunIcon.h"
 #include "logger.hpp"
@@ -140,7 +141,7 @@ HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSys
     ImGui::NewFrame();
     imgui::beginFrame();
 
-    if (curScene) {
+    if (curScene && isInGame) {
         sead::LookAtCamera* cam = &const_cast<sead::LookAtCamera&>(al::getLookAtCamera(curScene, 0));
         sead::Projection* projection = cam ? &const_cast<sead::Projection&>(al::getProjectionSead(curScene, 0)) : nullptr;
 
@@ -150,6 +151,7 @@ HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSys
 
     drawMain(gameSystem->mSequence);
     StageWarper::ShowSearchWindow();
+    LoadLevel::DrawStageCameraParamWindow();
 
     ImGui::Render();
     hk::gfx::ImGuiBackendNvn::instance()->draw(ImGui::GetDrawData(), drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
